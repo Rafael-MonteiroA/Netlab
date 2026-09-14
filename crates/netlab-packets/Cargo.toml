@@ -1,0 +1,11 @@
+[package]
+name = "netlab-packets"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Structured packet representations for NetLab"
+
+[dependencies]
+netlab-core = { path = "../netlab-core" }
+netlab-network = { path = "../netlab-network" }

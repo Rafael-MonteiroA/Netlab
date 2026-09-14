@@ -1,0 +1,14 @@
+# Rust build artifacts
+/target/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Editors and operating-system metadata
+.vscode/
+.idea/
+*.log
+Thumbs.db
+Desktop.ini

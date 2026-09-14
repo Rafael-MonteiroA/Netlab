@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/netlab-core",
+    "crates/netlab-network",
+    "crates/netlab-packets",
+    "crates/netlab-protocols",
+    "crates/netlab-cli",
+]
+
+[workspace.package]
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+authors = ["Rafael Monteiro"]

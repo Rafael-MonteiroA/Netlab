@@ -1,0 +1,40 @@
+# NetLab Scenario — Switched Ethernet LAN
+name = "Switched Network"
+description = "Two hosts connected through a learning Ethernet switch."
+version = "0.2"
+
+[simulation]
+seed = 42
+mode = "run"
+
+[[hosts]]
+name = "PC1"
+mac = "02:00:00:00:00:01"
+ip = "10.0.0.1"
+
+[[hosts]]
+name = "PC2"
+mac = "02:00:00:00:00:02"
+ip = "10.0.0.2"
+
+[[switches]]
+name = "SW1"
+ports = 2
+
+[[links]]
+from = "PC1"
+to = "SW1"
+latency_ms = 5
+enabled = true
+
+[[links]]
+from = "PC2"
+to = "SW1"
+latency_ms = 7
+enabled = true
+
+[[actions]]
+type = "ping"
+from = "PC1"
+target = "10.0.0.2"
+count = 2

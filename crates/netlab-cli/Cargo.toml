@@ -1,0 +1,13 @@
+[package]
+name = "netlab-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Command-line interface for NetLab"
+
+[dependencies]
+netlab-core = { path = "../netlab-core" }
+netlab-network = { path = "../netlab-network" }
+netlab-packets = { path = "../netlab-packets" }
+netlab-protocols = { path = "../netlab-protocols" }
