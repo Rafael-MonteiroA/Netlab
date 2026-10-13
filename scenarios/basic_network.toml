@@ -1,0 +1,41 @@
+# NetLab Scenario — Basic Network
+#
+# Este é o cenário básico de referência do NetLab.
+# Representa dois computadores conectados diretamente por um link com
+# latência de 10ms.
+#
+# O parser da CLI carrega este cenário e o executa sobre o engine.
+#
+# Topologia:
+#
+#   PC1 (10.0.0.1) ---- 10ms ---- PC2 (10.0.0.2)
+
+name = "Basic Network"
+description = "Two hosts connected by a single link with 10ms latency."
+version = "0.1"
+
+[simulation]
+seed = 42
+mode = "run"
+
+[[hosts]]
+name = "PC1"
+mac  = "02:00:00:00:00:01"
+ip   = "10.0.0.1"
+
+[[hosts]]
+name = "PC2"
+mac  = "02:00:00:00:00:02"
+ip   = "10.0.0.2"
+
+[[links]]
+from       = "PC1"
+to         = "PC2"
+latency_ms = 10
+enabled    = true
+
+[[actions]]
+type   = "ping"
+from   = "PC1"
+target = "10.0.0.2"
+count  = 3

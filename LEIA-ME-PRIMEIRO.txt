@@ -1,0 +1,42 @@
+NETLAB ANDROID 0.5.1 / WINDOWS 0.4 - MENSAGENS SEM INTERNET E SEM WI-FI
+
+ANDROID COM ANDROID
+1. Instale android/NetLab-Bluetooth-0.5.1.apk nos dois celulares (Android 8+).
+2. Ative Bluetooth e pareie os celulares nas configuracoes.
+3. No primeiro app, toque em Receber conexao.
+4. No segundo, Atualizar, selecione o primeiro e toque em Conectar.
+5. Envie mensagens nos dois sentidos. Wi-Fi e dados moveis podem ficar desligados.
+
+ANDROID COM WINDOWS
+1. Extraia o pacote completo e abra Iniciar-NetLab.cmd no PC.
+2. Instale o APK no Android e pareie PC/celular pelo Bluetooth do sistema.
+3. No Android, toque em Receber conexao.
+4. No PC: http://localhost:8787 > Bluetooth sem Wi-Fi > Atualizar aparelhos.
+5. Selecione o celular e clique em Conectar por Bluetooth.
+O PC precisa ter adaptador Bluetooth classico compativel. Um par por vez.
+
+REDE LOCAL COM MAIS APARELHOS
+Use Conexoes reais, crie a sala e compartilhe o QR Code.
+Escolha em Endereco e diagnostico a interface ligada ao outro aparelho.
+Ate 16 clientes acessam o mesmo servidor via rede IP; internet nao e necessaria.
+O QR Code e para esse modo de rede local, nao para pareamento Bluetooth.
+
+Encerrar: Desconectar e parar no Android; Parar-NetLab.cmd no Windows.
+Nao ha cadastro, cobranca ou servidor externo necessario para o modo Bluetooth.
+O APK e de desenvolvimento, compilado e assinado localmente.
+
+STATUS HONESTO DESTA ENTREGA
+Servidor e APK compilados; testes de software e navegador executados.
+Bluetooth entre aparelhos fisicos AINDA NAO TESTADO: nao havia radio Bluetooth
+ativo no PC nem celular conectado. Nao e uma garantia de compatibilidade.
+Os aparelhos precisam estar proximos. Nao cria sinal de internet ou uma VPN.
+
+Guia e roteiro de testes: docs/offline-bluetooth.md
+Rede local/servidor: docs/real-network.md
+Resultados de verificacao: docs/validation.md
+Codigo: crates/ e android/; executaveis: bin/.
+
+NOVA INTERFACE ANDROID
+React offline, temas claro/escuro, menu animado e conversas em baloes.
+A assinatura e a mesma da 0.4: instale o novo APK como atualizacao.
+Detalhes e limites de validacao: docs/android-ui.md

@@ -1,0 +1,11 @@
+import {build} from 'esbuild';
+import {mkdir,copyFile,writeFile} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+import {thirdPartyNotices} from './notices.mjs';
+const output=fileURLToPath(new URL('../app/src/main/assets/ui/',import.meta.url));
+await mkdir(output,{recursive:true});
+await build({entryPoints:['src/main.jsx'],bundle:true,minify:true,format:'iife',target:'chrome80',jsx:'automatic',outfile:output+'app.js',legalComments:'external',define:{'process.env.NODE_ENV':'"production"'}});
+await copyFile('src/style.css',output+'style.css');
+await writeFile(output+'THIRD_PARTY_NOTICES.txt',thirdPartyNotices());
+await writeFile(output+'index.html',`<!doctype html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f4f6f0"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>NetLab · Bluetooth</title><link rel="stylesheet" href="./style.css"><script defer src="./app.js"></script></head><body><div id="root"><p>Carregando NetLab…</p></div><noscript>Ative JavaScript para abrir a interface local.</noscript></body></html>`);
+console.log('Interface offline compilada em android/app/src/main/assets/ui');
