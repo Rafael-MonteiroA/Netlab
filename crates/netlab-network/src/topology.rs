@@ -34,13 +34,28 @@ impl Topology {
         }
     }
 
-    pub fn insert_host(&mut self, host: Host) -> Result<DeviceId, NetworkError> {
+    pub fn insert_host(&mut self, mut host: Host) -> Result<DeviceId, NetworkError> {
         let id = host.id();
         if self.hosts.contains_key(&id) || self.switches.contains_key(&id) {
             return Err(NetworkError::DuplicateDeviceId);
         }
         self.next_device_id = self.next_device_id.max(id.0.saturating_add(1));
-        self.next_interface_id = self.next_interface_id.max(id.0.saturating_add(1));
+        // Host::new uses its device ID as a provisional interface ID. Switch ports
+        // may already own that ID, so allocate a distinct ID before insertion.
+        let interface_id = host.interface().id();
+        if self
+            .hosts
+            .values()
+            .flat_map(Host::interfaces)
+            .chain(self.switches.values().flat_map(Switch::ports))
+            .any(|interface| interface.id() == interface_id)
+        {
+            host.interface_mut()
+                .set_id(InterfaceId(self.next_interface_id));
+        }
+        self.next_interface_id = self
+            .next_interface_id
+            .max(host.interface().id().0.saturating_add(1));
         self.hosts.insert(id, host);
         Ok(id)
     }
@@ -293,6 +308,26 @@ mod tests {
                 Ipv4Address::new([10, 0, 0, last]),
             )
             .expect("host")
+    }
+
+    #[test]
+    fn interfaces_remain_unique_when_hosts_are_added_after_switches() {
+        let mut topology = Topology::new();
+        let switch = topology.add_switch("SW1", 4).expect("switch");
+        let a = host(&mut topology, "PC1", 1);
+        let b = host(&mut topology, "PC2", 2);
+        let link_a = topology.connect(a, switch, 5, true).expect("link A");
+        let link_b = topology.connect(b, switch, 7, true).expect("link B");
+        assert_eq!(topology.peer(link_a, a), Some(switch));
+        assert_eq!(topology.peer(link_b, switch), Some(b));
+        let interfaces: Vec<_> = topology
+            .hosts()
+            .flat_map(|h| h.interfaces())
+            .chain(topology.switches().flat_map(|s| s.ports()))
+            .map(|i| i.id())
+            .collect();
+        let unique: std::collections::HashSet<_> = interfaces.iter().collect();
+        assert_eq!(interfaces.len(), unique.len());
     }
 
     #[test]

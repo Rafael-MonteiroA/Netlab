@@ -1,5 +1,7 @@
 # Rust build artifacts
 /target/
+/bin/
+/work/
 
 # Local configuration and secrets
 .env
@@ -12,3 +14,11 @@
 *.log
 Thumbs.db
 Desktop.ini
+
+# Android build outputs and local signing/configuration
+android/.gradle/
+android/**/build/
+android/local.properties
+*.p12
+*.jks
+*.keystore

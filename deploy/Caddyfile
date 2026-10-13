@@ -1,0 +1,3 @@
+{$NETLAB_DOMAIN} {
+    reverse_proxy netlab:8787
+}

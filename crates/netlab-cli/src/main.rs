@@ -3,7 +3,7 @@ use netlab_packets::{IcmpType, Packet, Payload};
 use netlab_protocols::{run_ping, PingConfig, PingResult, ProtocolError};
 use std::{env, fs, io, path::Path};
 
-const VERSION: &str = "0.2.0";
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 #[derive(Debug, PartialEq, Eq)]
 enum Command {
     Help,

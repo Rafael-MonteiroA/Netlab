@@ -1,10 +1,47 @@
 # NetLab
 
-**Laboratório virtual de redes e motor determinístico de simulação escrito em Rust.**
+**Laboratório visual de redes e comunicação real entre aparelhos, escrito em Rust.**
+
+## Novo na versão 0.4
+
+- Aplicativo Android e ponte Windows para texto por Bluetooth, sem internet e sem Wi-Fi.
+- Android ↔ Android ou Android ↔ Windows, um par Bluetooth por vez.
+- Reconexão automática, fila, proteção contra duplicatas e confirmações de recebimento/exibição.
+- QR Code de convite, seleção de endereço e diagnóstico para o modo de rede local.
+- APK compilado; comunicação por rádio ainda pendente de teste físico.
+
+**[Começar pelo Bluetooth e instalar o APK](docs/offline-bluetooth.md)**
+
+## Interface gráfica e rede local
+
+O NetLab agora inclui interface gráfica no navegador, salas privadas para até
+16 clientes, mensagens em tempo real (para todos ou para um destinatário), mapa
+de conexões e teste de latência entre clientes. No laboratório visual, é possível
+editar hosts, endereços e latências, desligar links e inspecionar os pacotes
+calculados pelo motor original.
+
+**Windows:** abra `Iniciar-NetLab.cmd` no pacote que inclui o executável.
+Use `Parar-NetLab.cmd` para encerrar o servidor.
+
+**A partir do código-fonte:**
+
+```sh
+cargo run --locked -p netlab-server
+```
+
+Abra `http://localhost:8787`. Em outro aparelho da mesma rede, use
+`http://IP-DO-COMPUTADOR:8787` e entre com o convite. Pela internet, hospede a mesma
+instância com HTTPS; há Dockerfile e Compose com Caddy incluídos.
+
+**[Guia completo de conexão, implantação e limitações](docs/real-network.md)**
+
+O modo de rede IP usa Wi-Fi/cabo/internet já disponíveis, através de um servidor
+intermediário. O modo Bluetooth usa diretamente os rádios dos aparelhos. Não cria infraestrutura de internet nem uma VPN. O laboratório
+simulado e a comunicação real são modos distintos da mesma interface.
 
 [![Rust](https://img.shields.io/badge/Rust-2021-orange?logo=rust)](https://www.rust-lang.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-[![Status](https://img.shields.io/badge/status-v0.2.0%20functional-success)](CHANGELOG.md)
+[![Status](https://img.shields.io/badge/status-v0.4.0%20experimental-success)](CHANGELOG.md)
 
 O NetLab é um projeto experimental para estudar redes de computadores a partir
 do zero. Ele modela hosts, interfaces, links, switches, endereços MAC e IPv4,
@@ -17,7 +54,7 @@ ciclo de vida.
 
 ## O que já funciona
 
-- Workspace Rust organizado em cinco crates.
+- Workspace Rust organizado em seis crates, incluindo servidor e interface gráfica.
 - Relógio virtual em milissegundos.
 - Scheduler e fila de eventos determinísticos.
 - Hosts com interfaces Ethernet, MAC e IPv4.
@@ -47,7 +84,8 @@ O RTT esperado é de 24 ms: `(5 + 7) × 2`.
 
 ## Requisitos
 
-- Rust estável e Cargo.
+- Para compilar o servidor: Rust estável e Cargo. O pacote Windows já inclui executáveis.
+- Para Bluetooth: Android 8+ e Bluetooth clássico; no PC, Windows com adaptador compatível.
 - Windows, Linux ou macOS.
 
 Confira a instalação em [rust-lang.org/tools/install](https://www.rust-lang.org/tools/install).
@@ -124,9 +162,11 @@ Há exemplos completos em [`scenarios/`](scenarios/).
 | `netlab-packets` | Ethernet, IPv4, ICMP, payloads e ciclo de vida dos pacotes |
 | `netlab-protocols` | Comportamento dos protocolos e execução do ping |
 | `netlab-cli` | Interface de linha de comando |
+| `netlab-server` | Interface gráfica, API de simulação, WebSocket e ponte Bluetooth no Windows |
+| `android/` | Aplicativo nativo Android para Bluetooth RFCOMM |
 
 O core não depende da CLI. A mesma simulação pode ser usada por testes,
-ferramentas de linha de comando e uma futura interface gráfica.
+ferramentas de linha de comando e a interface gráfica atual.
 
 ## Determinismo
 
@@ -152,7 +192,8 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 - [ ] UDP e sockets virtuais.
 - [ ] TCP.
 - [ ] DNS e HTTP virtuais.
-- [ ] Editor visual de topologias.
+- [x] Editor visual de topologias em estrela com hosts e switch.
+- [x] Comunicação real entre clientes via servidor WebSocket.
 - [ ] Integração futura com hardware, incluindo ESP32.
 
 O planejamento detalhado está em [`docs/roadmap.md`](docs/roadmap.md), e a
@@ -160,8 +201,10 @@ especificação original está em [`PROJECT_SPEC.md`](PROJECT_SPEC.md).
 
 ## Limitações atuais
 
-Ainda não há ARP, roteamento entre sub-redes, TCP, DNS, HTTP ou interface
-gráfica. A versão atual concentra-se em uma LAN simulada com hosts e switches.
+O motor de simulação ainda não tem ARP, roteamento entre sub-redes, TCP virtual,
+DNS virtual ou HTTP virtual. A GUI edita LANs em estrela. A comunicação real usa
+a pilha TCP/IP do sistema operacional via WebSocket e não instala interfaces de
+rede virtuais. Acesso entre redes diferentes exige um servidor alcançável e HTTPS.
 
 ## Licença
 

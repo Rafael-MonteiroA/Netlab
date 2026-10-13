@@ -1,0 +1,8 @@
+target
+bin
+work
+.git
+*.zip
+.env*
+
+android

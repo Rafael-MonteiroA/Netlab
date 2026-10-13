@@ -3,6 +3,27 @@
 Este documento descreve o roadmap de desenvolvimento do NetLab, do estado
 atual até a visão de longo prazo.
 
+## Atualização — v0.4.0 entregue para teste
+
+Reconexão automática, confirmações, deduplicação e QR Code foram implementados.
+Há APK Android e ponte Windows para mensagens por Bluetooth entre um par de
+aparelhos. Compilação e testes de software concluídos; homologação física ainda
+pendente por falta de rádio/telefones no ambiente. Consulte
+[offline-bluetooth.md](offline-bluetooth.md). Grupos Bluetooth, arquivos e
+criptografia própria continuam fora desta versão.
+
+## Entrega anterior — v0.3.0
+
+A prioridade desta versão passou a ser uma interface utilizável e comunicação
+entre clientes reais. Foram implementados: GUI no navegador, laboratório em
+estrela, inspetor de pacotes, servidor WebSocket com salas/convites, mensagens,
+presença e ping de aplicação. Consulte [real-network.md](real-network.md).
+
+Próximos passos: homologação em aparelhos físicos e hospedagem HTTPS; depois
+controle administrativo de salas, transferência de arquivos e, se necessário,
+criptografia de ponta a ponta. ARP/roteadores continuam como evolução do motor.
+As versões abaixo preservam o planejamento original, não as datas de entrega.
+
 ---
 
 ## Estado atual — v0.1.0 concluída
@@ -59,7 +80,7 @@ cargo run -p netlab-cli -- run scenarios/basic_network.toml  # executa
 
 ---
 
-## v0.3.0 — ARP
+## Planejado — ARP (versão a redefinir)
 
 - ARP Request e Reply
 - ARP cache nos hosts
@@ -122,7 +143,7 @@ cargo run -p netlab-cli -- run scenarios/basic_network.toml  # executa
 
 ## Futuro (sem versão definida)
 
-- **GUI:** editor visual de topologias (Tauri + egui ou similar)
+- **GUI:** edição de links arbitrários e roteadores além do editor web em estrela já entregue
 - **Packet Capture:** modo semelhante ao Wireshark
 - **ESP32:** integração com hardware físico
 - **Redes híbridas:** dispositivos virtuais + ESP32

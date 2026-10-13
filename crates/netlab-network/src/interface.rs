@@ -29,6 +29,9 @@ impl Interface {
     pub fn id(&self) -> InterfaceId {
         self.id
     }
+    pub(crate) fn set_id(&mut self, id: InterfaceId) {
+        self.id = id;
+    }
     pub fn name(&self) -> &str {
         &self.name
     }
