@@ -25,12 +25,15 @@ public class MainActivity extends Activity {
     private boolean bound=false,foreground=false,pageReady=false,chatVisible=false;
     private String notice="";
     private JSONObject sendResult;
+    private boolean scanAfterPermission;
+    private String report="";
     private final ServiceConnection connection=new ServiceConnection(){
         public void onServiceConnected(ComponentName name,IBinder binder){service=((ChatService.LocalBinder)binder).service();attach();}
         public void onServiceDisconnected(ComponentName name){service=null;render();}
     };
     @Override public void onCreate(Bundle saved){
         super.onCreate(saved);
+        applyScreenPrivacy(getSharedPreferences("netlab",MODE_PRIVATE).getBoolean("screenPrivacy",false));
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
         frame=new FrameLayout(this);frame.setBackgroundColor(Color.rgb(244,246,240));
         web=new WebView(this);web.setBackgroundColor(Color.TRANSPARENT);
@@ -41,7 +44,7 @@ public class MainActivity extends Activity {
             return insets;
         });
         setContentView(frame);applyTheme(false);
-        WebSettings settings=web.getSettings();settings.setJavaScriptEnabled(true);settings.setDomStorageEnabled(true);
+        WebSettings settings=web.getSettings();settings.setJavaScriptEnabled(true);settings.setDomStorageEnabled(true);settings.setTextZoom(Math.round(getResources().getConfiguration().fontScale*100));
         settings.setAllowFileAccess(false);settings.setAllowContentAccess(false);settings.setBlockNetworkLoads(true);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);settings.setSupportMultipleWindows(false);
         web.addJavascriptInterface(new NativeBridge(),"NetLabNative");
@@ -70,8 +73,30 @@ public class MainActivity extends Activity {
         if(!adapter().isEnabled()){notice="Ative o Bluetooth nas configurações para continuar.";render();return false;}return true;
     }
     private void attach(){if(service!=null)service.attach(this::render,foreground&&chatVisible);else render();}
+    private void scanQr(){
+        if(!hasPermission()){scanAfterPermission=true;ready();return;}
+        if(!ready())return;
+        if(checkSelfPermission(Manifest.permission.CAMERA)!=PackageManager.PERMISSION_GRANTED){requestPermissions(new String[]{Manifest.permission.CAMERA},3);return;}
+        startActivityForResult(new Intent(this,QrScannerActivity.class),20);
+    }
+    @Override protected void onActivityResult(int request,int result,Intent data){
+        super.onActivityResult(request,result,data);
+        if(request==21&&result==RESULT_OK&&data!=null&&data.getData()!=null){try(OutputStream output=getContentResolver().openOutputStream(data.getData())){if(service!=null)service.exportHistory(output);notice="Conversa exportada. O arquivo contém textos pessoais sem criptografia.";}catch(Exception e){notice="Não foi possível exportar a conversa.";}render();return;}
+        if(request!=20||result!=RESULT_OK||data==null)return;
+        try{
+            String address=BluetoothInvite.parse(data.getStringExtra("qr"));
+            if(!ready())return;
+            BluetoothDevice pc=null;for(BluetoothDevice device:adapter().getBondedDevices())if(device.getAddress().equals(address))pc=device;
+            if(pc==null){notice="Pareie este PC com o celular nas configurações Bluetooth e escaneie novamente.";render();return;}
+            final String target=address;String name=pc.getName()==null?"PC pareado":pc.getName();
+            new AlertDialog.Builder(this).setTitle("Conectar a "+name+"?")
+                .setMessage("O NetLab ficará aguardando este PC por Bluetooth. Mantenha o QR Code aberto no computador.")
+                .setNegativeButton("Cancelar",null).setPositiveButton("Conectar",(dialog,which)->{start("listen",target);notice="QR reconhecido. Aguardando a conexão do PC por Bluetooth.";render();}).show();
+        }catch(IllegalArgumentException|SecurityException e){notice=e.getMessage();render();}
+    }
     private void start(String action,String address){
         if(!ready())return;
+        if(service!=null&&address!=null&&service.blocked(address)){notice="Este aparelho está bloqueado no NetLab. Libere-o em Aparelhos.";render();return;}
         if("connect".equals(action)){
             boolean paired=false;for(BluetoothDevice d:adapter().getBondedDevices())if(d.getAddress().equals(address))paired=true;
             if(!paired){notice="Pareie esse aparelho nas configurações e atualize a lista.";render();return;}
@@ -88,10 +113,11 @@ public class MainActivity extends Activity {
                 BluetoothAdapter radio=adapter();bluetooth=radio==null?"unsupported":radio.isEnabled()?"enabled":"disabled";
                 if(radio!=null&&radio.isEnabled()){
                     ArrayList<BluetoothDevice> list=new ArrayList<>(radio.getBondedDevices());list.sort(Comparator.comparing(BluetoothDevice::getAddress));
-                    for(BluetoothDevice d:list){JSONObject item=new JSONObject();item.put("address",d.getAddress());item.put("name",d.getName()==null?"Aparelho Bluetooth":d.getName());devices.put(item);}
+                    for(BluetoothDevice d:list){JSONObject item=new JSONObject();item.put("address",d.getAddress());item.put("name",d.getName()==null?"Aparelho Bluetooth":d.getName());item.put("blocked",service!=null&&service.blocked(d.getAddress()));devices.put(item);}
                 }
             }
             state.put("devices",devices);state.put("bluetooth",bluetooth);state.put("deviceName",Build.MODEL);state.put("notice",notice);state.put("sendResult",sendResult==null?JSONObject.NULL:sendResult);
+            state.put("report",report).put("screenPrivacy",getSharedPreferences("netlab",MODE_PRIVATE).getBoolean("screenPrivacy",false));
             String data=JSONObject.quote(state.toString()).replace("\u2028","\\u2028").replace("\u2029","\\u2029");
             web.evaluateJavascript("window.dispatchEvent(new CustomEvent('netlab:state',{detail:JSON.parse("+data+")}));",null);
         }catch(JSONException|SecurityException e){notice="Não foi possível atualizar o Bluetooth. Confira a permissão em Dispositivos por perto.";}
@@ -102,6 +128,19 @@ public class MainActivity extends Activity {
             runOnUiThread(()->{if(!pageReady)return;try{
                 JSONObject value=new JSONObject(raw);String type=value.optString("type");
                 switch(type){
+                    case "draft":if(service!=null)service.draft(value.optString("address"),value.optString("text"));break;
+                    case "history":if(service!=null)service.selectHistory(value.optString("address"));break;
+                    case "historyPage":if(service!=null)service.historyPage(value.optBoolean("older"));break;
+                    case "clearHistory":new AlertDialog.Builder(MainActivity.this).setTitle("Apagar conversa neste aparelho?").setMessage("O histórico, o rascunho e a fila de envio serão apagados. A cópia do outro aparelho permanece.").setNegativeButton("Cancelar",null).setPositiveButton("Apagar",(d,w)->{if(service!=null)service.clearHistory(false);render();}).show();break;
+                    case "clearAllHistory":new AlertDialog.Builder(MainActivity.this).setTitle("Apagar todas as conversas locais?").setMessage("Todas as conversas, rascunhos e mensagens pendentes serão removidos deste aparelho. Esta ação não pode ser desfeita.").setNegativeButton("Cancelar",null).setPositiveButton("Apagar tudo",(d,w)->{if(service!=null)service.clearHistory(true);render();}).show();break;
+                    case "exportHistory":new AlertDialog.Builder(MainActivity.this).setTitle("Exportar os textos da conversa?").setMessage("O arquivo exportado não será criptografado. Salve em um lugar de confiança.").setNegativeButton("Cancelar",null).setPositiveButton("Escolher arquivo",(d,w)->startActivityForResult(new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("text/plain").putExtra(Intent.EXTRA_TITLE,"NetLab-conversa.txt"),21)).show();break;
+                    case "block":if(service!=null)service.block(value.optString("address"),value.optBoolean("value"));render();break;
+                    case "readReceipts":if(service!=null)service.readReceipts(value.optBoolean("value"));render();break;
+                    case "screenPrivacy":getSharedPreferences("netlab",MODE_PRIVATE).edit().putBoolean("screenPrivacy",value.optBoolean("value")).commit();applyScreenPrivacy(value.optBoolean("value"));render();break;
+                    case "diagnostics":report=diagnostics();render();break;
+                    case "shareReport":{String text=value.optString("text");if(text.length()>12000)return;startActivity(Intent.createChooser(new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT,text),"Compartilhar relatório revisado"));break;}
+                    case "copyReport":{String text=value.optString("text");if(text.length()>12000)return;((ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(ClipData.newPlainText("Diagnóstico NetLab",text));notice="Relatório copiado. Nenhum envio automático foi feito.";render();break;}
+                    case "scanQr":scanQr();break;
                     case "refresh":notice="";render();break;
                     case "minimize":moveTaskToBack(true);break;
                     case "permission":ready();render();break;
@@ -120,7 +159,7 @@ public class MainActivity extends Activity {
                     }
                     default:break;
                 }
-            }catch(Exception e){notice="Não foi possível concluir. Confira o Bluetooth e tente novamente.";render();}});
+            }catch(Exception e){notice="Não foi possível concluir. Seu rascunho foi mantido; confira espaço livre, permissões e conexão.";render();}});
         }
     }
     private void applyTheme(boolean dark){
@@ -128,8 +167,19 @@ public class MainActivity extends Activity {
         getWindow().setStatusBarColor(color);getWindow().setNavigationBarColor(color);
         getWindow().getDecorView().setSystemUiVisibility(dark?0:View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
     }
-    @Override public void onRequestPermissionsResult(int r,String[] p,int[] g){super.onRequestPermissionsResult(r,p,g);if(r==1&&!(g.length>0&&g[0]==PackageManager.PERMISSION_GRANTED))notice="Permita Dispositivos por perto para conectar. Você pode alterar isso nas configurações do Android.";render();}
-    @Override public void onStart(){super.onStart();bound=bindService(new Intent(this,ChatService.class),connection,0);}
+    private void applyScreenPrivacy(boolean enabled){if(enabled)getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);}
+    private String diagnostics()throws JSONException{
+        JSONObject result=new JSONObject().put("app","NetLab").put("version","0.7.0").put("androidApi",Build.VERSION.SDK_INT)
+            .put("bluetoothPermission",hasPermission()).put("cameraPermission",checkSelfPermission(Manifest.permission.CAMERA)==PackageManager.PERMISSION_GRANTED)
+            .put("storage","Android Keystore / AES-GCM").put("includesMessages",false).put("includesAddresses",false);
+        if(service!=null){JSONObject state=service.snapshot();result.put("phase",state.optString("phase")).put("pendingCount",state.optInt("pending"))
+            .put("storageHealthy",state.optString("storageError").isEmpty());}
+        return result.toString(2);
+    }
+    @Override public void onRequestPermissionsResult(int r,String[] p,int[] g){super.onRequestPermissionsResult(r,p,g);boolean granted=g.length>0&&g[0]==PackageManager.PERMISSION_GRANTED;
+        if(r==1){if(!granted)notice="Permita Dispositivos por perto para conectar. Você pode alterar isso nas configurações do Android.";boolean resume=scanAfterPermission;scanAfterPermission=false;if(granted&&resume)scanQr();}
+        if(r==3){if(granted)scanQr();else notice="Permita a câmera para ler o QR Code. A conexão manual continua disponível em Aparelhos.";}render();}
+    @Override public void onStart(){super.onStart();bound=bindService(new Intent(this,ChatService.class),connection,BIND_AUTO_CREATE);}
     @Override public void onResume(){super.onResume();foreground=true;attach();render();}
     @Override public void onPause(){foreground=false;attach();super.onPause();}
     @Override public void onStop(){if(service!=null)service.attach(null,false);if(bound){unbindService(connection);bound=false;}service=null;super.onStop();}

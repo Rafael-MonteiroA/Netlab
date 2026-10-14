@@ -18,10 +18,12 @@ function Invoke-BuildTool([string]$Executable,[string[]]$ToolArgs) {
     if($LASTEXITCODE -ne 0){throw "Falha em $Executable (codigo $LASTEXITCODE)"}
 }
 $javaFiles=Get-ChildItem (Join-Path $androidRoot 'app\src\main\java') -Recurse -Filter *.java | Select-Object -ExpandProperty FullName
-Invoke-BuildTool (Join-Path $JdkRoot 'bin\javac.exe') (@('-encoding','UTF-8','--release','8','-classpath',$androidJar,'-d',$classes)+$javaFiles)
+$zxing=Join-Path $androidRoot 'libs\zxing-core-3.5.3.jar'
+if((Get-FileHash -LiteralPath $zxing -Algorithm SHA256).Hash -ne '8D8064C1636FDAEF7189DD9055C7D59950A8940A12F2293956446EC3C109FD82'){throw 'Biblioteca ZXing diferente da versão verificada'}
+Invoke-BuildTool (Join-Path $JdkRoot 'bin\javac.exe') (@('-encoding','UTF-8','--release','8','-classpath',"$androidJar;$zxing",'-d',$classes)+$javaFiles)
 $classesJar=Join-Path $BuildDirectory 'classes.jar'
 Invoke-BuildTool (Join-Path $JdkRoot 'bin\jar.exe') @('cf',$classesJar,'-C',$classes,'.')
-Invoke-BuildTool (Join-Path $buildTools 'd8.bat') @('--lib',$androidJar,'--min-api','26','--output',$dex,$classesJar)
+Invoke-BuildTool (Join-Path $buildTools 'd8.bat') @('--lib',$androidJar,'--min-api','26','--output',$dex,$classesJar,$zxing)
 $unsigned=Join-Path $BuildDirectory 'unsigned.apk'
 $resourceApk=Join-Path $BuildDirectory 'resources.apk'
 $resources=Join-Path $BuildDirectory 'resources.zip'
@@ -31,7 +33,7 @@ if(-not(Test-Path (Join-Path $assets 'ui\app.js'))){throw 'Compile primeiro a in
 # AGP supplies the namespace; direct aapt2 needs it in a temporary manifest.
 $manifest=Join-Path $BuildDirectory 'AndroidManifest.xml'
 (Get-Content (Join-Path $androidRoot 'app\src\main\AndroidManifest.xml') -Raw).Replace('<manifest ', '<manifest package="br.netlab.bluetooth" ') | Set-Content -LiteralPath $manifest -Encoding utf8
-Invoke-BuildTool (Join-Path $buildTools 'aapt2.exe') @('link','-o',$resourceApk,'-I',$androidJar,'--manifest',$manifest,'-R',$resources,'--min-sdk-version','26','--target-sdk-version','35','--version-code','6','--version-name','0.5.1')
+Invoke-BuildTool (Join-Path $buildTools 'aapt2.exe') @('link','-o',$resourceApk,'-I',$androidJar,'--manifest',$manifest,'-R',$resources,'--min-sdk-version','26','--target-sdk-version','35','--version-code','8','--version-name','0.7.0')
 # Create one fresh ZIP instead of mutating a jar-produced archive in Update mode.
 # Mixing those writers left inconsistent classes.dex headers that ART rejects.
 # DEX and resources.arsc stay uncompressed for Android's direct loading/alignment.

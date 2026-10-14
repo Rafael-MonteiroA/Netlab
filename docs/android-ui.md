@@ -1,4 +1,4 @@
-# NetLab Android 0.5.1 — interface React offline
+# NetLab Android 0.6 — interface React offline
 
 O aplicativo Android recebeu uma interface React com Motion, Radix Dialog e
 ícones Lucide. Inclui temas claro/escuro, menu animado, navegação inferior,
@@ -7,9 +7,9 @@ horários e confirmações. O serviço Java continua responsável pelo Bluetooth
 
 ## Instalar a atualização
 
-Envie `android/NetLab-Bluetooth-0.5.1.apk` para o celular e abra o arquivo.
+Envie `android/NetLab-Bluetooth-0.7.apk` para o celular e abra o arquivo.
 A assinatura é a mesma dos APKs 0.4 e 0.5 fornecidos neste projeto; o código de versão
-agora é 6. O Android oferece atualização da instalação existente.
+agora é 7. O Android oferece atualização da instalação existente.
 Não é necessário desinstalar a versão anterior.
 
 A versão 0.5.1 corrige o fechamento na abertura causado pelo empacotamento do DEX
@@ -19,7 +19,8 @@ de bibliotecas diferentes. O registro reproduzido no emulador apontava
 
 No menu, escolha Claro/Escuro. Em Aparelhos, abra as configurações para parear
 os dispositivos e atualize a lista. Um aparelho usa Receber conexão e o outro
-Conectar. O servidor Windows 0.4 continua compatível, com o mesmo protocolo.
+Conectar. O servidor Windows 0.4 continua compatível para conexão manual.
+Para QR Code, use Windows 0.6 e siga [qr-bluetooth.md](qr-bluetooth.md).
 
 ## Arquitetura e funcionamento offline
 

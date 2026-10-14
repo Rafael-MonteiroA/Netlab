@@ -3,7 +3,8 @@ param(
     [Parameter(Mandatory=$true)][string]$JdkRoot,
     [Parameter(Mandatory=$true)][string]$BuildDirectory,
     [Parameter(Mandatory=$true)][string]$SigningKey,
-    [Parameter(Mandatory=$true)][string]$DeviceSerial
+    [Parameter(Mandatory=$true)][string]$DeviceSerial,
+    [switch]$TestCamera
 )
 $ErrorActionPreference='Stop'
 # Install the production APK first. This separate instrumentation package uses the
@@ -27,6 +28,9 @@ Invoke-Tool "$JdkRoot/bin/jar.exe" @('u0f',"$BuildDirectory/unsigned.apk",'-C',"
 Invoke-Tool "$buildTools/zipalign.exe" @('-f','4',"$BuildDirectory/unsigned.apk","$BuildDirectory/aligned.apk")
 Invoke-Tool "$buildTools/apksigner.bat" @('sign','--v4-signing-enabled','false','--ks',$SigningKey,'--ks-pass','pass:android','--out',"$BuildDirectory/smoke.apk","$BuildDirectory/aligned.apk")
 Invoke-Tool $adb @('-s',$DeviceSerial,'install','-r',"$BuildDirectory/smoke.apk")
-$result=& $adb -s $DeviceSerial shell am instrument -w br.netlab.smoke/br.netlab.smoke.StartupSmoke
+$instrumentArgs=@('-s',$DeviceSerial,'shell','am','instrument','-w')
+if($TestCamera){$instrumentArgs+=@('-e','camera','true')}
+$instrumentArgs+='br.netlab.smoke/br.netlab.smoke.StartupSmoke'
+$result=& $adb @instrumentArgs
 $result | Tee-Object -FilePath "$BuildDirectory/result.txt"
 if($LASTEXITCODE -ne 0 -or ($result -join "`n") -notmatch 'result=PASS:'){throw 'O teste de abertura Android falhou'}

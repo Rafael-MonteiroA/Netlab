@@ -1,0 +1,2 @@
+40b18f0ef6610ac08989768ddaade11088b832c5ec239aa03c7efba0104517f6  android/NetLab-Bluetooth-0.7.apk
+11dd5a5b35ef45efbcd8018b300c132ad1b2ee3cf71a5c251de18d5764a2e66e  releases/NetLab-Windows-0.7.zip

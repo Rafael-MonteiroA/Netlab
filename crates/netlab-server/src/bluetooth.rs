@@ -13,7 +13,29 @@ use std::{net::SocketAddr, time::Duration};
 use tokio::sync::{mpsc, Semaphore};
 static CONNECTION: Semaphore = Semaphore::const_new(1);
 pub const SERVICE_UUID: &str = "08d4a386-30a7-4bd7-aeca-958c6432f208";
-fn allowed(remote: SocketAddr, headers: &HeaderMap) -> bool {
+fn invite_uri(address: &str) -> String {
+    format!("netlab://bluetooth/v1?pc={address}")
+}
+pub async fn qr_invite(
+    ConnectInfo(remote): ConnectInfo<SocketAddr>,
+    headers: HeaderMap,
+) -> Response {
+    if !allowed(remote, &headers) {
+        return StatusCode::FORBIDDEN.into_response();
+    }
+    match tokio::task::spawn_blocking(platform::radio).await {
+        Ok(Ok((address, name))) => {
+            let uri = invite_uri(&address);
+            match qrcode::QrCode::new(uri.as_bytes()) {
+                Ok(code) => Json(json!({"name":name,"address":address,"uri":uri,
+                    "svg":code.render::<qrcode::render::svg::Color>().min_dimensions(280,280).quiet_zone(true).build()})).into_response(),
+                Err(_) => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+            }
+        }
+        _ => (StatusCode::SERVICE_UNAVAILABLE, Json(json!({"error":"Ative um adaptador Bluetooth no PC e pareie o celular antes de gerar o QR Code."}))).into_response(),
+    }
+}
+pub(crate) fn allowed(remote: SocketAddr, headers: &HeaderMap) -> bool {
     let host = headers
         .get("host")
         .and_then(|v| v.to_str().ok())
@@ -117,6 +139,9 @@ pub(crate) fn valid_frame(text: &str) -> bool {
 #[cfg(not(windows))]
 mod platform {
     use super::*;
+    pub fn radio() -> Result<(String, String), String> {
+        Err("Bluetooth exige Windows.".into())
+    }
     pub fn devices() -> Result<Vec<Value>, String> {
         Err("A conexão Bluetooth deste servidor exige Windows.".into())
     }
@@ -132,6 +157,38 @@ mod platform {
         core::GUID,
         Win32::{Devices::Bluetooth::*, Foundation::CloseHandle, Networking::WinSock::*},
     };
+    pub fn radio() -> Result<(String, String), String> {
+        unsafe {
+            let params = BLUETOOTH_FIND_RADIO_PARAMS {
+                dwSize: size_of::<BLUETOOTH_FIND_RADIO_PARAMS>() as u32,
+            };
+            let mut handle = null_mut();
+            let find = BluetoothFindFirstRadio(&params, &mut handle);
+            if find.is_null() {
+                return Err("Nenhum rádio Bluetooth ativo.".into());
+            }
+            let mut info = BLUETOOTH_RADIO_INFO {
+                dwSize: size_of::<BLUETOOTH_RADIO_INFO>() as u32,
+                ..Default::default()
+            };
+            let result = BluetoothGetRadioInfo(handle, &mut info);
+            BluetoothFindRadioClose(find);
+            CloseHandle(handle);
+            if result != 0 {
+                return Err("Não foi possível identificar o adaptador Bluetooth.".into());
+            }
+            let value = info.address.Anonymous.ullLong;
+            let address = (0..6)
+                .rev()
+                .map(|i| format!("{:02X}", (value >> (i * 8)) & 255))
+                .collect::<Vec<_>>()
+                .join(":");
+            let name = String::from_utf16_lossy(
+                &info.szName[..info.szName.iter().position(|c| *c == 0).unwrap_or(248)],
+            );
+            Ok((address, name))
+        }
+    }
     pub fn devices() -> Result<Vec<Value>, String> {
         // All FFI buffers use generated Windows layouts; handles are closed in this scope.
         unsafe {
@@ -358,6 +415,20 @@ mod platform {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn qr_is_an_offline_invite_and_local_only() {
+        assert_eq!(
+            invite_uri("AA:BB:CC:DD:EE:FF"),
+            "netlab://bluetooth/v1?pc=AA:BB:CC:DD:EE:FF"
+        );
+        let mut headers = HeaderMap::new();
+        headers.insert("host", "localhost:8787".parse().unwrap());
+        headers.insert("origin", "http://localhost:8787".parse().unwrap());
+        assert!(allowed("127.0.0.1:12345".parse().unwrap(), &headers));
+        assert!(!allowed("192.168.1.5:12345".parse().unwrap(), &headers));
+        headers.insert("origin", "http://example.com".parse().unwrap());
+        assert!(!allowed("127.0.0.1:12345".parse().unwrap(), &headers));
+    }
     #[test]
     fn protocol_rejects_unbounded_or_unknown_frames() {
         assert!(valid_frame(

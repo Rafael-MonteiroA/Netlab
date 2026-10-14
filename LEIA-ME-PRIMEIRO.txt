@@ -1,7 +1,15 @@
-NETLAB ANDROID 0.5.1 / WINDOWS 0.4 - MENSAGENS SEM INTERNET E SEM WI-FI
+NETLAB ANDROID / WINDOWS 0.7 - MENSAGENS SEM INTERNET E SEM WI-FI
+
+PC POR QR CODE
+1. Extraia o ZIP inteiro e abra Iniciar-NetLab.cmd.
+2. Atualize o Android com NetLab-Bluetooth-0.7.apk.
+3. Ligue o Bluetooth e pareie o PC e o celular nas configuracoes do sistema.
+4. PC: Bluetooth sem Wi-Fi > Atualizar aparelhos > selecione o celular > Conectar por QR Code.
+5. Android: Aparelhos > Escanear QR Code > permita Camera > escaneie > Conectar.
+6. Aguarde a conexao mantendo a aba do PC aberta. Veja docs/qr-bluetooth.md.
 
 ANDROID COM ANDROID
-1. Instale android/NetLab-Bluetooth-0.5.1.apk nos dois celulares (Android 8+).
+1. Instale android/NetLab-Bluetooth-0.7.apk nos dois celulares (Android 8+).
 2. Ative Bluetooth e pareie os celulares nas configuracoes.
 3. No primeiro app, toque em Receber conexao.
 4. No segundo, Atualizar, selecione o primeiro e toque em Conectar.

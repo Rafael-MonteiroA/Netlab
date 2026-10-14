@@ -1,4 +1,20 @@
+# 0.7.0 — 2026-10-14
+
+- Histórico Bluetooth em SQLite criptografado, fila recuperável e rascunhos por aparelho.
+- Exportação, exclusão confirmada, bloqueio e confirmação de exibição opcional.
+- Proteção de tela Android, texto ampliado e melhorias de teclado e legibilidade.
+- Diagnóstico local revisável sem conteúdo das conversas ou identificadores pessoais.
+- Testes de persistência, falhas de armazenamento, isolamento e abertura Android 14.
+
 # Changelog
+
+## [0.6.0] - 2026-10-13
+
+- Windows gera QR Code Bluetooth para conexão ao celular selecionado e inicia tentativas.
+- Android oferece Aparelhos → Escanear QR Code, com leitor local ZXing e permissão de câmera.
+- Convite validado, PC previamente pareado e recepção restrita ao PC confirmado.
+- Novo pacote Windows pronto para executar e APK atualizável com a mesma assinatura.
+- Guia em docs/qr-bluetooth.md; mantida a correção de empacotamento da versão 0.5.1.
 
 ## [Android 0.5.1] - 2026-10-13
 

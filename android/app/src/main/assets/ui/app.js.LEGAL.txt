@@ -83,6 +83,7 @@ lucide-react/dist/esm/icons/message-circle.mjs:
 lucide-react/dist/esm/icons/monitor.mjs:
 lucide-react/dist/esm/icons/moon.mjs:
 lucide-react/dist/esm/icons/power.mjs:
+lucide-react/dist/esm/icons/qr-code.mjs:
 lucide-react/dist/esm/icons/radio.mjs:
 lucide-react/dist/esm/icons/refresh-cw.mjs:
 lucide-react/dist/esm/icons/settings-2.mjs:

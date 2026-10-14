@@ -64,3 +64,15 @@ conectado para validar WebView/teclado/radio reais. Detalhes em [android-ui.md](
 - Assinatura SHA-256 idêntica à 0.5, versão 6 / 0.5.1; sem permissão INTERNET.
 - O teste usa Android padrão em x86_64, não reproduz o firmware Samsung. Bluetooth
   por rádio e execução no S21 FE físico ainda dependem de validação no aparelho.
+
+## QR Bluetooth 0.6 — 13/10/2026
+
+- 8 testes React aprovados, incluindo o botão Escanear QR Code.
+- 15 testes Rust do servidor aprovados, incluindo formato do convite e acesso local.
+- Teste JVM aprova leitura QR a partir de pixels de luminância e rejeição de convites inválidos.
+- Teste Node da interface Windows aprova geração, destino selecionado, cancelamento e erros.
+- APK instalado como atualização em emulador Android 14. Instrumentação aprovada: abertura,
+  React, ponte nativa, envio bloqueado sem conexão, câmera abre e é liberada ao fechar.
+- Windows 0.6 compilado em release; interface acessível por localhost. A máquina de teste
+  informou Bluetooth indisponível; não houve ensaio de rádio ou leitura óptica com o S21 FE.
+- Android permanece sem INTERNET. A nova permissão CAMERA é solicitada ao abrir o leitor.

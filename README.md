@@ -2,12 +2,28 @@
 
 **Laboratório visual de redes e comunicação real entre aparelhos, escrito em Rust.**
 
-## Novo: aplicativo Android 0.5.1
+## Novo: Android e Windows 0.7
+
+Histórico Bluetooth persistente e protegido, recuperação de rascunhos e fila,
+controles de privacidade, acessibilidade e relatório de suporte revisável.
+[Guia das novidades e limites](docs/privacy-history-support.md).
+
+- [Baixar APK Android 0.7](android/NetLab-Bluetooth-0.7.apk?raw=true) — instalar como atualização.
+- [Baixar Windows 0.7](releases/NetLab-Windows-0.7.zip?raw=true) — extrair e abrir `Iniciar-NetLab.cmd`.
+- [SHA-256 dos instaladores](releases/SHA256SUMS.txt).
+
+Versão 0.7 testada nos aparelhos reais, com funcionamento confirmado pelo usuário.
+
+## Conectar por QR Code
+
+No PC, abra Bluetooth sem Wi-Fi e gere o código para o celular pareado. No Android,
+use Aparelhos → Escanear QR Code. A conexão continua por Bluetooth, sem Wi-Fi ou
+internet. [Passo a passo para testar](docs/qr-bluetooth.md).
 
 Interface renovada com React, Motion, Radix e Lucide: temas claro/escuro, menu
 animado, navegação por abas, mensagens em balões com horários e confirmações.
 Todos os recursos visuais ficam no APK e abrem offline. O servidor Windows
-continua na versão 0.4.
+agora inclui o fluxo de QR Code na versão 0.6.
 
 A atualização 0.5.1 corrige o fechamento imediato do APK 0.5 durante a abertura.
 
@@ -19,7 +35,7 @@ A atualização 0.5.1 corrige o fechamento imediato do APK 0.5 durante a abertur
 - Android ↔ Android ou Android ↔ Windows, um par Bluetooth por vez.
 - Reconexão automática, fila, proteção contra duplicatas e confirmações de recebimento/exibição.
 - QR Code de convite, seleção de endereço e diagnóstico para o modo de rede local.
-- APK compilado; comunicação por rádio ainda pendente de teste físico.
+- Comunicação física da versão 0.7 validada pelo usuário.
 
 **[Começar pelo Bluetooth e instalar o APK](docs/offline-bluetooth.md)**
 

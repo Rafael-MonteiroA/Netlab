@@ -69,3 +69,11 @@ $('import-scenario').onchange = async event => {
   catch (error) { notice('simulation-error', error.message); } finally { event.target.value = ''; }
 };
 renderPeers(); renderHosts();
+
+// Diagnostics use an explicit allowlist; never include errors or peer/session data.
+$('support-generate').onclick=async()=>{await btReady;$('support-report').value=JSON.stringify({application:'NetLab',version:'0.7.0',reportFormat:1,bluetoothConnected:bt.online,bluetoothPending:bt.pending.size,protectedStorageAvailable:bt.storageHealthy,readReceipts:bt.readReceipts,networkConnected:state.socket?.readyState===WebSocket.OPEN},null,2);$('support-status').textContent='Relatório gerado localmente. Revise o texto antes de compartilhar.';};
+$('support-copy').onclick=async()=>{try{if(!$('support-report').value)return;await navigator.clipboard.writeText($('support-report').value);$('support-status').textContent='Relatório copiado.';}catch{$('support-status').textContent='Selecione o texto e copie com Ctrl+C.';}};
+$('support-download').onclick=()=>{if($('support-report').value)downloadText('NetLab-diagnostico.txt',$('support-report').value);};
+$('large-text').checked=stored('netlab.largeText','false')==='true';
+function applyTextSize(){document.documentElement.classList.toggle('large-text',$('large-text').checked);save('netlab.largeText',String($('large-text').checked));}
+$('large-text').onchange=applyTextSize;applyTextSize();

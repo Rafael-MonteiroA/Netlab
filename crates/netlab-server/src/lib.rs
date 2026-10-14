@@ -2,6 +2,7 @@ mod bluetooth;
 mod network_info;
 mod reliable;
 mod simulation;
+mod vault;
 
 use axum::{
     extract::{DefaultBodyLimit, Request},
@@ -44,7 +45,18 @@ pub fn app() -> Router {
         )
         .route("/api/simulate", post(simulation::simulate))
         .route("/api/network", get(network_info::info))
+        .route(
+            "/vault-client.js",
+            get(|| async {
+                (
+                    [(header::CONTENT_TYPE, "text/javascript; charset=utf-8")],
+                    include_str!("../web/vault-client.js"),
+                )
+            }),
+        )
+        .route("/api/vault", get(vault::read).post(vault::write))
         .route("/api/bluetooth/devices", get(bluetooth::devices))
+        .route("/api/bluetooth/qr", get(bluetooth::qr_invite))
         .route("/ws/bluetooth", get(bluetooth::upgrade))
         .route(
             "/bluetooth-client.js",

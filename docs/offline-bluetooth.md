@@ -10,7 +10,7 @@ Veja também o [guia da interface Android 0.5](android-ui.md).
 
 ## Instalar
 
-O pacote inclui `android/NetLab-Bluetooth-0.5.1.apk`. Transfira-o por cabo USB ou outro
+O pacote inclui `android/NetLab-Bluetooth-0.7.apk`. Transfira-o por cabo USB ou outro
 meio e abra o arquivo no Android 8 ou mais recente. Autorize a instalação desse
 arquivo pelo gerenciador de arquivos, se solicitado. Trata-se de um APK de
 desenvolvimento assinado localmente, fora da Play Store. Não há compra ou assinatura.
